@@ -1,0 +1,85 @@
+#!/bin/bash
+#@author: GMerino, 2014
+
+echo ""
+echo "--------------------------------"
+echo "|                              |"
+echo "|          ABSCONDITA          |"
+echo "|                              |"
+echo "--------------------------------"
+echo ""
+echo ""
+
+OPTIONS="Install Uninstall About Quit"
+interfaceLoc = "IFACE"
+file="/etc/network/if-up.d/abscondite"
+log="/var/log/abscondite.log"
+
+echo "Choose an option from below:"
+select opt in $OPTIONS; 
+do
+    if [ "$opt" = "Quit" ]; then
+       echo Execution finished
+       exit
+    elif [ "$opt" = "Install" ]; then
+     apt-get install macchanger	
+     echo ""
+     echo "Please, indicate the name of your default network hardware (eg: wlan0, eth0...):"
+     echo ""
+     read -p "Wireless interface:" DEFAULTWLAN
+     read -p "Ethernet interface:" DEFAULTETH
+     echo ""
+     echo "Setting up the programm for interfaces $DEFAULTWLAN and $DEFAULTETH"
+     sudo touch $file
+     sudo chmod 700 $file
+     sudo touch $log
+     sudo chmod 600 $log
+     sudo echo "ABSCONDITA MAC ADDRESSES LOG" >> $log
+     sudo echo "" >> $log
+     	echo "#!/bin/sh" >> $file
+	echo "# filename: abscondita" >> $file
+	echo "#@author: GMerino" >> $file
+
+	
+	sudo echo "if [ \"\$IFACE\" = $DEFAULTWLAN ]; then" >> $file
+  	sudo echo "ifconfig $DEFAULTWLAN down" >> $file
+  	sudo echo "macchanger -r $DEFAULTWLAN" >> $file
+  	sudo echo "ifconfig $DEFAULTWLAN up" >> $file
+  	sudo echo "dhclient $DEFAULTWLAN" >> $file
+  	sudo echo "echo \"---------------------------------------------------\">> $log" >> $file
+  	sudo echo "echo \"Mac address changed on: \$(date +\"%m-%d-%Y at %T\") \">> $log" >> $file
+  	sudo echo "echo \"Used fake mac: $add = \$(cat /sys/class/net/wlan0/address)\">> $log" >> $file
+  	sudo echo "echo \"Interface: wlan0\" >> $log" >> $file
+        sudo echo "fi" >> $file
+	sudo echo "if [ \"\$IFACE\" = $DEFAULTETH ]; then" >> $file
+  	sudo echo "macchanger -r eth0" >> $file
+  	sudo echo "echo \"---------------------------------------------------\">> $log" >> $file 
+  	sudo echo "echo \"Mac address changed on: \$(date +\"%m-%d-%Y at %T\")\">> $log" >> $file
+  	sudo echo "echo \"Used fake mac: $add = \$(cat /sys/class/net/eth0/address)\">> $log" >> $file
+  	sudo echo "echo \"Interface: eth0\" >> $log" >> $file
+	sudo echo "fi" >> $file
+
+
+     echo "Renew your connection to apply changes"
+     exit
+    elif [ "$opt" = "Uninstall" ]; then
+     sudo rm $file
+     sudo rm $log
+     echo "You have chosen the blue pill..."
+    elif [ "$opt" = "About" ]; then
+     echo ""
+     echo ""
+     echo "ABSCONDITA is a security tool designed for any Linux distribution." 
+     echo "Once installed, it will automatically asign a random MAC address to your"
+     echo "computer's default interface in each established connection."
+     echo ""
+     echo "Every program operation will be logged in a file located at your logs folder."
+     echo ""
+     echo "Created by Guillermo Merino - European University Madrid"
+     echo ""
+    else
+    echo ""
+    echo Not a valid option
+    echo ""
+    fi
+done
